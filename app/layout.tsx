@@ -1,10 +1,37 @@
 import type { Metadata, Viewport } from "next";
+import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 
+const playfair = Playfair_Display({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "700"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "ZEREN — Свежие продукты с базара",
-  description: "Даланың дәмі — үйіңізге. Свежие продукты с базара Алтын Орда с доставкой на дом в Алматы.",
+  title: "Zeren — Свежие продукты с базара с доставкой | Алматы",
+  description:
+    "Доставка свежих продуктов с Алтын Орды по базарным ценам. На 25–40% дешевле супермаркетов. Подписка от ₸2 990/мес.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Zeren — Базар к вашей двери",
+    description:
+      "Свежие продукты с базара на 25–40% дешевле Magnum. Доставка в тот же день.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Zeren — Базар к вашей двери",
+    description: "Свежие продукты с базара на 25–40% дешевле Magnum.",
+  },
 };
 
 export const viewport: Viewport = {
@@ -21,12 +48,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className="h-full">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body>{children}</body>
+    <html lang="ru" className={`${playfair.variable} ${dmSans.variable}`}>
+      <body style={{ fontFamily: "var(--font-dm-sans, inherit)" }}>{children}</body>
     </html>
   );
 }

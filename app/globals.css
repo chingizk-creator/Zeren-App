@@ -27,26 +27,25 @@
 }
 
 html {
-  height: 100%;
-  overflow: hidden;
+  /* height intentionally unset — app-shell handles its own sizing */
 }
 
 body {
   font-family: var(--font-sans);
   background-color: #FAF7F0;
   color: #3D2E1F;
+  margin: 0;
+}
+
+/* App shell: full-screen mobile SPA layout */
+.app-shell {
+  display: flex;
+  flex-direction: column;
   max-width: 420px;
   margin: 0 auto;
   height: 100dvh;
   overflow: hidden;
   position: relative;
-}
-
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
   background: #FAF7F0;
 }
 
