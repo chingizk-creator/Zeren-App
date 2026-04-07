@@ -2,27 +2,31 @@
 
 import { useEffect } from "react";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import FloatingCart from "@/components/navigation/FloatingCart";
 import Toast from "@/components/ui/Toast";
 import OrderSuccess from "@/components/ui/OrderSuccess";
+import AuthFlow from "@/components/auth/AuthFlow";
 import HomeScreen from "@/screens/HomeScreen";
 import CartScreen from "@/screens/CartScreen";
 import TrackingScreen from "@/screens/TrackingScreen";
 import SavingsScreen from "@/screens/SavingsScreen";
 import SubscriptionScreen from "@/screens/SubscriptionScreen";
+import ProfileScreen from "@/screens/ProfileScreen";
 
-// Screen titles for non-home screens
 const SCREEN_TITLES: Record<string, string | undefined> = {
   cart: "Корзина",
   tracking: "Трекинг",
   savings: "Экономия",
   subscription: "Подписка",
+  profile: "Профиль",
 };
 
 function AppShell() {
   const { state, showToast } = useApp();
+  const { authState } = useAuth();
   const { screen } = state;
 
   // First-load toast notification (5s delay)
@@ -41,10 +45,8 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      {/* Header */}
       <Header title={screenTitle} />
 
-      {/* Screen content */}
       <main
         style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
         id="main-content"
@@ -53,16 +55,20 @@ function AppShell() {
         {screen === "cart" && <CartScreen />}
         {screen === "tracking" && <TrackingScreen />}
         {screen === "savings" && <SavingsScreen />}
-        {screen === "subscription" && <SubscriptionScreen />}
+        {/* Show ProfileScreen for logged-in users, SubscriptionScreen for guests */}
+        {screen === "subscription" && (
+          authState.user.isAuthenticated ? <ProfileScreen /> : <SubscriptionScreen />
+        )}
+        {screen === "profile" && <ProfileScreen />}
       </main>
 
-      {/* Floating cart bar */}
       <FloatingCart />
-
-      {/* Bottom navigation */}
       <BottomNav />
 
-      {/* Overlays */}
+      {/* Auth flow modals (rendered on top of everything) */}
+      <AuthFlow />
+
+      {/* App-level overlays */}
       <Toast />
       <OrderSuccess />
     </div>
@@ -72,7 +78,9 @@ function AppShell() {
 export default function Page() {
   return (
     <AppProvider>
-      <AppShell />
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
     </AppProvider>
   );
 }

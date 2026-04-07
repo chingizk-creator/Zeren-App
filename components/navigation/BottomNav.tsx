@@ -1,32 +1,40 @@
 "use client";
 
 import { useApp, type Screen } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavItem {
   id: Screen;
   label: string;
   icon: string;
-  showDot?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV: NavItem[] = [
   { id: "home", label: "Главная", icon: "🏪" },
   { id: "cart", label: "Корзина", icon: "🛒" },
   { id: "tracking", label: "Трекинг", icon: "📍" },
   { id: "savings", label: "Экономия", icon: "💰" },
-  { id: "subscription", label: "Профиль", icon: "👤" },
 ];
+
+const GUEST_LAST: NavItem = { id: "subscription", label: "Профиль", icon: "👤" };
+const AUTH_LAST: NavItem = { id: "profile", label: "Профиль", icon: "👤" };
 
 export default function BottomNav() {
   const { state, setScreen, cartItemCount } = useApp();
+  const { authState } = useAuth();
   const { screen, hasActiveOrder, trackingStep } = state;
+  const isAuthenticated = authState.user.isAuthenticated;
 
+  const navItems: NavItem[] = [...BASE_NAV, isAuthenticated ? AUTH_LAST : GUEST_LAST];
   const showTrackingDot = hasActiveOrder && trackingStep >= 0 && trackingStep < 4;
 
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Основная навигация">
-      {NAV_ITEMS.map((item) => {
-        const isActive = screen === item.id;
+      {navItems.map((item) => {
+        const isActive = screen === item.id ||
+          // profile and subscription share the last tab slot visually
+          (item.id === "profile" && screen === "subscription") ||
+          (item.id === "subscription" && screen === "profile");
         const isTracking = item.id === "tracking";
         const isCart = item.id === "cart";
 
@@ -37,22 +45,14 @@ export default function BottomNav() {
             onClick={() => setScreen(item.id)}
             aria-label={item.label}
             aria-current={isActive ? "page" : undefined}
-            style={{
-              background: "none",
-              border: "none",
-              padding: "8px 4px",
-              minHeight: 44,
-              minWidth: 0,
-            }}
+            style={{ background: "none", border: "none", padding: "8px 4px", minHeight: 44, minWidth: 0 }}
           >
-            {/* Active tracking dot */}
             {isTracking && showTrackingDot && (
               <div className="nav-active-dot" aria-hidden="true" />
             )}
 
             <div style={{ position: "relative", display: "inline-flex" }}>
               <span className="nav-icon">{item.icon}</span>
-              {/* Cart badge */}
               {isCart && cartItemCount > 0 && (
                 <div
                   style={{

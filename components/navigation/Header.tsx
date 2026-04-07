@@ -1,12 +1,22 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
+import { useApp } from "@/context/AppContext";
+
 interface HeaderProps {
-  showBack?: boolean;
-  onBack?: () => void;
   title?: string;
 }
 
-export default function Header({ showBack, onBack, title }: HeaderProps) {
+export default function Header({ title }: HeaderProps) {
+  const { authState } = useAuth();
+  const { setScreen } = useApp();
+  const { user } = authState;
+
+  // Show last 2 digits of phone for avatar label
+  const avatarLabel = user.isAuthenticated && user.phone
+    ? user.phone.slice(-2)
+    : null;
+
   return (
     <header
       style={{
@@ -20,49 +30,17 @@ export default function Header({ showBack, onBack, title }: HeaderProps) {
         zIndex: 50,
       }}
     >
-      {showBack ? (
-        <button
-          onClick={onBack}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#C8A96E",
-            fontSize: 20,
-            cursor: "pointer",
-            padding: "0 8px 0 0",
-            display: "flex",
-            alignItems: "center",
-          }}
-          aria-label="Назад"
-        >
-          ←
-        </button>
-      ) : (
-        <div style={{ width: 32 }} />
-      )}
+      {/* Left spacer / back slot */}
+      <div style={{ width: 36 }} />
 
+      {/* Center: brand or screen title */}
       {title ? (
-        <span
-          style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: "#C8A96E",
-            fontFamily: "Georgia, serif",
-          }}
-        >
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#C8A96E", fontFamily: "Georgia, serif" }}>
           {title}
         </span>
       ) : (
         <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              fontFamily: "Georgia, serif",
-              fontSize: 15,
-              fontWeight: 700,
-              color: "#C8A96E",
-              letterSpacing: "2px",
-            }}
-          >
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#C8A96E", letterSpacing: "2px" }}>
             ZEREN
           </div>
           <div style={{ fontSize: 9, color: "#E8D5A8", letterSpacing: "0.5px", marginTop: 1 }}>
@@ -71,7 +49,36 @@ export default function Header({ showBack, onBack, title }: HeaderProps) {
         </div>
       )}
 
-      <div style={{ width: 32 }} />
+      {/* Right: user avatar when logged in */}
+      <div style={{ width: 36, display: "flex", justifyContent: "flex-end" }}>
+        {avatarLabel ? (
+          <button
+            onClick={() => setScreen("profile")}
+            aria-label="Профиль"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: "50%",
+              background: "rgba(200,169,110,0.2)",
+              border: "1.5px solid rgba(200,169,110,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 10,
+              fontWeight: 700,
+              color: "#C8A96E",
+              fontFamily: "inherit",
+              minHeight: "unset",
+              minWidth: "unset",
+            }}
+          >
+            {avatarLabel}
+          </button>
+        ) : (
+          <div style={{ width: 30 }} />
+        )}
+      </div>
     </header>
   );
 }

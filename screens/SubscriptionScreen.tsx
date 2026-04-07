@@ -1,12 +1,15 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { SUBSCRIPTION_PLANS } from "@/data/subscriptions";
 import { formatPrice } from "@/utils/formatPrice";
 
 export default function SubscriptionScreen() {
   const { state, setSubscription } = useApp();
+  const { authState, startAuth } = useAuth();
   const { activeSubscription } = state;
+  const isAuthenticated = authState.user.isAuthenticated;
 
   return (
     <div className="screen" style={{ paddingBottom: 24 }}>
@@ -195,16 +198,11 @@ export default function SubscriptionScreen() {
               {!isActive && (
                 <button
                   className="btn-primary"
-                  style={{
-                    width: "100%",
-                    height: 42,
-                    borderRadius: 10,
-                    fontSize: 13,
-                  }}
-                  onClick={() => setSubscription(plan.id)}
-                  aria-label={`Выбрать план ${plan.name}`}
+                  style={{ width: "100%", height: 42, borderRadius: 10, fontSize: 13 }}
+                  onClick={() => isAuthenticated ? setSubscription(plan.id) : startAuth(false)}
+                  aria-label={isAuthenticated ? `Выбрать план ${plan.name}` : "Войти чтобы подписаться"}
                 >
-                  Выбрать план
+                  {isAuthenticated ? "Выбрать план" : "Войти чтобы подписаться"}
                 </button>
               )}
             </div>

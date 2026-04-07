@@ -1,10 +1,13 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { formatPrice } from "@/utils/formatPrice";
 
 export default function SavingsScreen() {
   const { state } = useApp();
+  const { authState, startAuth } = useAuth();
+  const isAuthenticated = authState.user.isAuthenticated;
   const { lifetimeSavings, orderHistory } = state;
 
   return (
@@ -87,7 +90,24 @@ export default function SavingsScreen() {
           История заказов
         </h2>
 
-        {orderHistory.length === 0 ? (
+        {!isAuthenticated ? (
+          <div style={{ background: "white", borderRadius: 16, border: "1px solid #EAE4D8", padding: "24px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🔐</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#3D2E1F", marginBottom: 6 }}>
+              Войдите, чтобы увидеть вашу историю
+            </div>
+            <div style={{ fontSize: 12, color: "#9A9490", marginBottom: 16 }}>
+              Все ваши заказы и личная экономия будут здесь
+            </div>
+            <button
+              className="btn-primary"
+              style={{ padding: "10px 24px", fontSize: 13, borderRadius: 10 }}
+              onClick={() => startAuth(false)}
+            >
+              Войти
+            </button>
+          </div>
+        ) : orderHistory.length === 0 ? (
           <div
             style={{
               textAlign: "center",

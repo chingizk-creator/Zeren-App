@@ -6,15 +6,34 @@ import React, {
   useReducer,
   useCallback,
   useMemo,
+  useEffect,
   type ReactNode,
 } from "react";
 import type { Product } from "@/data/products";
+
+const CART_STORAGE_KEY = "zeren_cart";
+
+function loadCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as CartItem[];
+  } catch {}
+  return [];
+}
+
+function saveCart(cart: CartItem[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  } catch {}
+}
 
 // ────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────
 
-export type Screen = "home" | "cart" | "tracking" | "savings" | "subscription";
+export type Screen = "home" | "cart" | "tracking" | "savings" | "subscription" | "profile";
 
 export interface CartItem {
   id: number;
@@ -66,7 +85,8 @@ type Action =
   | { type: "SHOW_TOAST"; title: string; desc: string; emoji: string }
   | { type: "HIDE_TOAST" }
   | { type: "SHOW_ORDER_SUCCESS" }
-  | { type: "HIDE_ORDER_SUCCESS" };
+  | { type: "HIDE_ORDER_SUCCESS" }
+  | { type: "SET_CART"; items: CartItem[] };
 
 // ────────────────────────────────────────────────
 // Mock order history
@@ -257,6 +277,9 @@ function reducer(state: AppState, action: Action): AppState {
     case "HIDE_ORDER_SUCCESS":
       return { ...state, orderSuccessVisible: false };
 
+    case "SET_CART":
+      return { ...state, cart: action.items };
+
     default:
       return state;
   }
@@ -292,6 +315,17 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  // Hydrate cart from localStorage after first mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    const saved = loadCart();
+    if (saved.length > 0) dispatch({ type: "SET_CART", items: saved });
+  }, []);
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    saveCart(state.cart);
+  }, [state.cart]);
 
   const setScreen = useCallback((screen: Screen) => dispatch({ type: "SET_SCREEN", screen }), []);
   const addToCart = useCallback((product: Product) => dispatch({ type: "ADD_TO_CART", product }), []);

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ProductVisual from "@/components/product/ProductVisual";
 import QuantityStepper from "@/components/ui/QuantityStepper";
 import { useApp } from "@/context/AppContext";
-import { formatPrice, formatPercent } from "@/utils/formatPrice";
+import { useAuth } from "@/context/AuthContext";
+import AddressEntry from "@/components/auth/AddressEntry";
+import { formatPrice } from "@/utils/formatPrice";
 import { PRODUCTS } from "@/data/products";
 
 const DELIVERY_SLOTS = [
@@ -31,8 +33,18 @@ export default function CartScreen() {
     cartSavings,
   } = useApp();
 
+  const {
+    authState,
+    startAuth,
+    shouldProceedToCheckout,
+    consumeCheckoutSignal,
+  } = useAuth();
+
+  const { user } = authState;
+
   const [selectedSlot, setSelectedSlot] = useState("18-20");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showAddressEdit, setShowAddressEdit] = useState(false);
 
   const savingsPercent = cartRetailTotal > 0
     ? Math.round((cartSavings / cartRetailTotal) * 100)
@@ -40,20 +52,71 @@ export default function CartScreen() {
 
   const canCheckout = cartTotal >= MIN_ORDER;
 
-  const handleCheckout = useCallback(() => {
-    if (!canCheckout || isCheckingOut) return;
+  // ── Actual order confirmation (fires when auth+address are complete) ──
+  const placeOrder = useCallback(() => {
+    if (isCheckingOut) return;
     setIsCheckingOut(true);
-
     showOrderSuccess();
     startOrder(cartSavings);
-
     setTimeout(() => {
       clearCart();
       setIsCheckingOut(false);
       setScreen("tracking");
     }, 2500);
-  }, [canCheckout, isCheckingOut, showOrderSuccess, startOrder, cartSavings, clearCart, setScreen]);
+  }, [isCheckingOut, showOrderSuccess, startOrder, cartSavings, clearCart, setScreen]);
 
+  // ── Listen for checkout signal from AuthContext ──
+  useEffect(() => {
+    if (shouldProceedToCheckout) {
+      consumeCheckoutSignal();
+      placeOrder();
+    }
+  }, [shouldProceedToCheckout, consumeCheckoutSignal, placeOrder]);
+
+  // ── Checkout button tap ──
+  const handleCheckout = useCallback(() => {
+    if (!canCheckout || isCheckingOut) return;
+
+    if (!user.isAuthenticated) {
+      // Trigger auth flow; checkout continues after auth completes
+      startAuth(true);
+      return;
+    }
+
+    if (!user.address) {
+      // Auth done but no address yet — open address modal
+      startAuth(true); // will jump straight to address step since authenticated
+      return;
+    }
+
+    placeOrder();
+  }, [canCheckout, isCheckingOut, user, startAuth, placeOrder]);
+
+  // When authenticated user has no address, auth flow goes to address step
+  // We need to handle the case where user is already authenticated and clicks checkout
+  const handleAuthenticatedCheckout = useCallback(() => {
+    if (!canCheckout || isCheckingOut) return;
+    if (!user.address) {
+      // Show address modal inline
+      setShowAddressEdit(true);
+      return;
+    }
+    placeOrder();
+  }, [canCheckout, isCheckingOut, user, placeOrder]);
+
+  // Combine handlers
+  const onCheckout = user.isAuthenticated ? handleAuthenticatedCheckout : handleCheckout;
+
+  // After address is saved via inline modal, place order
+  useEffect(() => {
+    if (showAddressEdit && user.address && !isCheckingOut) {
+      setShowAddressEdit(false);
+      placeOrder();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.address]);
+
+  // ── Empty state ──
   if (state.cart.length === 0) {
     return (
       <div className="screen" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
@@ -92,15 +155,7 @@ export default function CartScreen() {
               {idx > 0 && (
                 <div style={{ height: 1, background: "#EAE4D8", margin: "0 0 12px" }} />
               )}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginBottom: 12,
-                }}
-              >
-                {/* Visual - static in cart */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                 {product ? (
                   <ProductVisual
                     emoji={product.emoji}
@@ -114,8 +169,6 @@ export default function CartScreen() {
                     {item.emoji}
                   </div>
                 )}
-
-                {/* Info */}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F", marginBottom: 2 }}>
                     {item.name}
@@ -127,8 +180,6 @@ export default function CartScreen() {
                     {formatPrice(item.price * item.quantity)}
                   </div>
                 </div>
-
-                {/* Stepper */}
                 <QuantityStepper
                   quantity={item.quantity}
                   onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
@@ -145,68 +196,31 @@ export default function CartScreen() {
       </div>
 
       {/* Savings summary */}
-      <div
-        style={{
-          margin: "8px 16px",
-          background: "white",
-          borderRadius: 16,
-          border: "1px solid #EAE4D8",
-          padding: "14px 16px",
-        }}
-      >
+      <div style={{ margin: "8px 16px", background: "white", borderRadius: 16, border: "1px solid #EAE4D8", padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontSize: 13, color: "#9A9490" }}>Корзина</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F" }}>
-            {formatPrice(cartTotal)}
-          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F" }}>{formatPrice(cartTotal)}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={{ fontSize: 13, color: "#9A9490" }}>В Magnum</span>
-          <span
-            style={{
-              fontSize: 13,
-              color: "#C5C0B8",
-              textDecoration: "line-through",
-            }}
-          >
-            {formatPrice(cartRetailTotal)}
-          </span>
+          <span style={{ fontSize: 13, color: "#C5C0B8", textDecoration: "line-through" }}>{formatPrice(cartRetailTotal)}</span>
         </div>
         <div style={{ height: 1, background: "#EAE4D8", marginBottom: 10 }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F" }}>Экономия</span>
           <div style={{ textAlign: "right" }}>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: "#4A8B3A",
-                fontFamily: "Georgia, serif",
-              }}
-            >
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#4A8B3A", fontFamily: "Georgia, serif" }}>
               {formatPrice(cartSavings)}
             </div>
-            <div style={{ fontSize: 11, color: "#4A8B3A" }}>
-              {savingsPercent}% от Magnum
-            </div>
+            <div style={{ fontSize: 11, color: "#4A8B3A" }}>{savingsPercent}% от Magnum</div>
           </div>
         </div>
       </div>
 
       {/* Delivery window picker */}
       <div style={{ padding: "8px 16px" }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", marginBottom: 10 }}>
-          Доставка
-        </h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gap: 6,
-          }}
-          role="group"
-          aria-label="Выберите время доставки"
-        >
+        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", marginBottom: 10 }}>Доставка</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }} role="group" aria-label="Выберите время доставки">
           {DELIVERY_SLOTS.map((slot) => (
             <button
               key={slot.id}
@@ -214,7 +228,6 @@ export default function CartScreen() {
               onClick={() => slot.available && setSelectedSlot(slot.id)}
               disabled={!slot.available}
               aria-pressed={selectedSlot === slot.id}
-              aria-label={`Доставка ${slot.label}${!slot.available ? ", недоступно" : ""}`}
             >
               {slot.label}
             </button>
@@ -222,8 +235,34 @@ export default function CartScreen() {
         </div>
       </div>
 
+      {/* Saved address display */}
+      {user.isAuthenticated && user.address && (
+        <div style={{ padding: "4px 16px 8px", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 12, color: "#9A9490" }}>
+            📍 {user.address.street}{user.address.apartment ? `, ${user.address.apartment}` : ""}
+          </span>
+          <button
+            onClick={() => setShowAddressEdit(true)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#D4853A",
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              padding: 0,
+              fontFamily: "inherit",
+              minHeight: "unset",
+              minWidth: "unset",
+            }}
+          >
+            Изменить
+          </button>
+        </div>
+      )}
+
       {/* Checkout button */}
-      <div style={{ padding: "12px 16px" }}>
+      <div style={{ padding: "8px 16px 16px" }}>
         <button
           className="btn-primary"
           style={{
@@ -235,26 +274,23 @@ export default function CartScreen() {
             gap: 2,
             opacity: canCheckout ? 1 : 0.55,
           }}
-          onClick={handleCheckout}
+          onClick={onCheckout}
           disabled={!canCheckout}
-          aria-label={
-            canCheckout
-              ? `Заказать на ${formatPrice(cartTotal)}`
-              : `Минимальный заказ ${formatPrice(MIN_ORDER)}`
-          }
+          aria-label={canCheckout ? `Заказать на ${formatPrice(cartTotal)}` : `Минимальный заказ ${formatPrice(MIN_ORDER)}`}
         >
           {canCheckout ? (
             <>
               <span>Заказать · {formatPrice(cartTotal)}</span>
-              <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>
-                Бесплатная доставка
-              </span>
+              <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>Бесплатная доставка</span>
             </>
           ) : (
             <span>Мин. {formatPrice(MIN_ORDER)}</span>
           )}
         </button>
       </div>
+
+      {/* Address edit modal (inline, for logged-in users) */}
+      {showAddressEdit && <AddressEntry />}
     </div>
   );
 }
