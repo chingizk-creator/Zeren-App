@@ -1,18 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const playfair = Playfair_Display({
   subsets: ["latin", "cyrillic"],
-  weight: ["400", "700"],
+  weight: ["400", "700", "800"],
   variable: "--font-playfair",
   display: "swap",
 });
 
-const dmSans = DM_Sans({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -48,8 +48,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={`${playfair.variable} ${dmSans.variable}`}>
-      <body style={{ fontFamily: "var(--font-dm-sans, inherit)" }}>{children}</body>
+    <html lang="ru" className={`${playfair.variable} ${jakarta.variable}`}>
+      <body style={{ fontFamily: "var(--font-jakarta, inherit)" }}>{children}</body>
     </html>
   );
 }

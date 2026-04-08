@@ -20,13 +20,13 @@ export default function Header({ title }: HeaderProps) {
   return (
     <header
       style={{
-        background: "#3D2E1F",
+        background: "#2C2016",
         padding: "12px 16px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         flexShrink: 0,
-        minHeight: 52,
+        minHeight: 56,
         zIndex: 50,
       }}
     >
@@ -40,10 +40,24 @@ export default function Header({ title }: HeaderProps) {
         </span>
       ) : (
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#C8A96E", letterSpacing: "2px" }}>
+          <div style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 18,
+            fontWeight: 700,
+            color: "#C8A96E",
+            letterSpacing: "4px",
+            lineHeight: 1,
+          }}>
             ZEREN
           </div>
-          <div style={{ fontSize: 9, color: "#E8D5A8", letterSpacing: "0.5px", marginTop: 1 }}>
+          <div style={{
+            fontSize: 9,
+            color: "#E8D5A8",
+            letterSpacing: "1.5px",
+            marginTop: 2,
+            opacity: 0.7,
+            fontFamily: "var(--font-jakarta, sans-serif)",
+          }}>
             📍 Алматы
           </div>
         </div>
@@ -56,16 +70,16 @@ export default function Header({ title }: HeaderProps) {
             onClick={() => setScreen("profile")}
             aria-label="Профиль"
             style={{
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               borderRadius: "50%",
-              background: "rgba(200,169,110,0.2)",
-              border: "1.5px solid rgba(200,169,110,0.5)",
+              background: "rgba(200,169,110,0.15)",
+              border: "1.5px solid rgba(200,169,110,0.4)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: 700,
               color: "#C8A96E",
               fontFamily: "inherit",
@@ -76,7 +90,7 @@ export default function Header({ title }: HeaderProps) {
             {avatarLabel}
           </button>
         ) : (
-          <div style={{ width: 30 }} />
+          <div style={{ width: 32 }} />
         )}
       </div>
     </header>

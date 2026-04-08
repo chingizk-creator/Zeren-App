@@ -119,19 +119,26 @@ export default function CartScreen() {
   // ── Empty state ──
   if (state.cart.length === 0) {
     return (
-      <div className="screen" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
-        <span style={{ fontSize: 56 }}>🦌</span>
+      <div className="screen" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: 40 }}>
+        <div style={{ fontSize: 64, opacity: 0.5 }}>🦌</div>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#3D2E1F", marginBottom: 6 }}>
+          <div style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#3D2E1F",
+            marginBottom: 8,
+            fontFamily: "var(--font-playfair, Georgia, serif)",
+            letterSpacing: "-0.02em",
+          }}>
             Корзина пуста
           </div>
-          <div style={{ fontSize: 13, color: "#9A9490" }}>
+          <div style={{ fontSize: 14, color: "#9A9490", lineHeight: 1.5 }}>
             Добавьте свежих продуктов с базара
           </div>
         </div>
         <button
           className="btn-primary"
-          style={{ padding: "12px 28px", fontSize: 14, borderRadius: 12 }}
+          style={{ padding: "14px 32px", fontSize: 15, borderRadius: 14, fontWeight: 700 }}
           onClick={() => setScreen("home")}
         >
           За покупками
@@ -142,20 +149,35 @@ export default function CartScreen() {
 
   return (
     <div className="screen" style={{ paddingBottom: 16 }}>
-      <div style={{ padding: "16px 16px 0", marginBottom: 8 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: "#3D2E1F" }}>Корзина</h1>
+      {/* Screen title */}
+      <div style={{ padding: "16px 16px 0", marginBottom: 12 }}>
+        <h1 style={{
+          fontSize: 26,
+          fontWeight: 700,
+          color: "#3D2E1F",
+          fontFamily: "var(--font-playfair, Georgia, serif)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
+        }}>Корзина</h1>
       </div>
 
-      {/* Cart items */}
-      <div style={{ padding: "0 16px" }}>
+      {/* Cart items — elevated card wrapping all items */}
+      <div style={{
+        margin: "0 16px 12px",
+        background: "white",
+        borderRadius: 18,
+        border: "1px solid #EAE4D8",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(61,46,31,0.07)",
+        overflow: "hidden",
+      }}>
         {state.cart.map((item, idx) => {
           const product = PRODUCTS.find((p) => p.id === item.id);
           return (
             <div key={item.id}>
               {idx > 0 && (
-                <div style={{ height: 1, background: "#EAE4D8", margin: "0 0 12px" }} />
+                <div style={{ height: 1, background: "#EAE4D8" }} />
               )}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
                 {product ? (
                   <ProductVisual
                     emoji={product.emoji}
@@ -170,13 +192,13 @@ export default function CartScreen() {
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F", marginBottom: 2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", marginBottom: 2 }}>
                     {item.name}
                   </div>
-                  <div style={{ fontSize: 10, color: "#9A9490" }}>
+                  <div style={{ fontSize: 11, color: "#9A9490" }}>
                     {item.vendorName} · №{item.stallNumber}
                   </div>
-                  <div style={{ fontSize: 12, color: "#9A9490", marginTop: 2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", fontFamily: "Georgia, serif", marginTop: 2 }}>
                     {formatPrice(item.price * item.quantity)}
                   </div>
                 </div>
@@ -195,32 +217,66 @@ export default function CartScreen() {
         })}
       </div>
 
-      {/* Savings summary */}
-      <div style={{ margin: "8px 16px", background: "white", borderRadius: 16, border: "1px solid #EAE4D8", padding: "14px 16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#9A9490" }}>Корзина</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F" }}>{formatPrice(cartTotal)}</span>
+      {/* Savings summary card — gradient background, HUGE savings number */}
+      <div style={{
+        margin: "0 16px 12px",
+        background: "linear-gradient(135deg, #FFFFFF 0%, #FAF7F0 50%, #FDF5E8 100%)",
+        borderRadius: 18,
+        border: "1px solid #EAE4D8",
+        padding: "16px 18px",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(61,46,31,0.05)",
+      }}>
+        {/* Top rows */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 13, color: "#9A9490", fontWeight: 500 }}>Корзина</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", fontFamily: "Georgia, serif" }}>
+            {formatPrice(cartTotal)}
+          </span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
           <span style={{ fontSize: 13, color: "#9A9490" }}>В Magnum</span>
-          <span style={{ fontSize: 13, color: "#C5C0B8", textDecoration: "line-through" }}>{formatPrice(cartRetailTotal)}</span>
+          <span style={{ fontSize: 13, color: "#C0392B", textDecoration: "line-through" }}>
+            {formatPrice(cartRetailTotal)}
+          </span>
         </div>
-        <div style={{ height: 1, background: "#EAE4D8", marginBottom: 10 }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#3D2E1F" }}>Экономия</span>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#4A8B3A", fontFamily: "Georgia, serif" }}>
-              {formatPrice(cartSavings)}
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "#EAE4D8", marginBottom: 12 }} />
+
+        {/* Big savings row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 12, color: "#4A8B3A", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 2 }}>
+              Ваша экономия
             </div>
-            <div style={{ fontSize: 11, color: "#4A8B3A" }}>{savingsPercent}% от Magnum</div>
+            <div style={{ fontSize: 11, color: "#9A9490" }}>{savingsPercent}% дешевле Magnum</div>
+          </div>
+          <div style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color: "#4A8B3A",
+            fontFamily: "Georgia, serif",
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
+          }}>
+            {formatPrice(cartSavings)}
           </div>
         </div>
       </div>
 
       {/* Delivery window picker */}
-      <div style={{ padding: "8px 16px" }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#3D2E1F", marginBottom: 10 }}>Доставка</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }} role="group" aria-label="Выберите время доставки">
+      <div style={{ padding: "4px 16px 10px" }}>
+        <h2 style={{
+          fontSize: 16,
+          fontWeight: 700,
+          color: "#3D2E1F",
+          fontFamily: "var(--font-playfair, Georgia, serif)",
+          letterSpacing: "-0.01em",
+          marginBottom: 10,
+        }}>
+          🕐 Время доставки
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }} role="group">
           {DELIVERY_SLOTS.map((slot) => (
             <button
               key={slot.id}
@@ -267,12 +323,14 @@ export default function CartScreen() {
           className="btn-primary"
           style={{
             width: "100%",
-            height: 54,
-            borderRadius: 14,
-            fontSize: 15,
+            height: 58,
+            borderRadius: 16,
+            fontSize: 16,
+            fontWeight: 700,
             flexDirection: "column",
-            gap: 2,
+            gap: 3,
             opacity: canCheckout ? 1 : 0.55,
+            letterSpacing: "-0.01em",
           }}
           onClick={onCheckout}
           disabled={!canCheckout}
@@ -281,7 +339,7 @@ export default function CartScreen() {
           {canCheckout ? (
             <>
               <span>Заказать · {formatPrice(cartTotal)}</span>
-              <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>Бесплатная доставка</span>
+              <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>🔒 Бесплатная доставка</span>
             </>
           ) : (
             <span>Мин. {formatPrice(MIN_ORDER)}</span>
