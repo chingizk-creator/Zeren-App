@@ -8,6 +8,8 @@ import {
   CONFIDENCE_LABELS, CONFIDENCE_COLORS, TREND_ICONS,
   type Settlement, type LoanOption,
 } from "@/sauda/data/mock";
+import LoanEligibility from "@/sauda/components/loan/LoanEligibility";
+import { useOnboarding } from "@/sauda/context/OnboardingContext";
 
 // ─── LoanModal ────────────────────────────────────────────────────────────────
 
@@ -337,7 +339,19 @@ export default function FinanceScreen() {
     applyLoan,
   } = useSauda();
 
+  const { state: onboardingState, saveIIN, setLoanConsent } = useOnboarding();
+  const [loanEligibilityOpen, setLoanEligibilityOpen] = useState(false);
+
   const { activeLoan, settlements, loanModalOpen, instantPayOrder } = state;
+
+  function handleRequestLoan() {
+    const { qualityScore, acceptanceRate } = state.vendor.metrics;
+    if (qualityScore >= 0.75 && acceptanceRate >= 0.60) {
+      openLoanModal();
+    } else {
+      setLoanEligibilityOpen(true);
+    }
+  }
 
   const hasActiveLoan =
     activeLoan.status === "active" || activeLoan.status === "repaying";
@@ -482,7 +496,7 @@ export default function FinanceScreen() {
               Ставка 25-30% годовых · Автосписание с выплат
             </div>
             <button
-              onClick={openLoanModal}
+              onClick={handleRequestLoan}
               style={{
                 background: "#D4853A",
                 color: "white",
@@ -709,6 +723,20 @@ export default function FinanceScreen() {
           settlement={instantPayOrder}
           onClose={closeInstantPay}
           onConfirm={completeInstantPay}
+        />
+      )}
+
+      {/* ── LOAN ELIGIBILITY ── */}
+      {loanEligibilityOpen && (
+        <LoanEligibility
+          monthsOnPlatform={12}
+          qualityScore={state.vendor.metrics.qualityScore}
+          acceptanceRate={state.vendor.metrics.acceptanceRate}
+          hasActiveDisputes={false}
+          hasIIN={!!onboardingState.iin}
+          onIINSaved={saveIIN}
+          onEligible={() => { setLoanEligibilityOpen(false); openLoanModal(); }}
+          onClose={() => setLoanEligibilityOpen(false)}
         />
       )}
     </>
